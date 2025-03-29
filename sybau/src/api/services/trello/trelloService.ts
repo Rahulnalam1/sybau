@@ -3,31 +3,63 @@ import {
     TrelloCard,
     CreateCardParams,
     UpdateCardParams,
-} from "@/types/types";
+} from "../../controllers/trello/types";
 import { trelloConfig } from "../../config/trello.config";
+import OAuth from "oauth-1.0a";
+import crypto from "crypto";
 
 export class TrelloService {
     private apiKey: string;
-    private token: string;
-    private baseUrl: string;
+    private oauth: OAuth;
+    private token?: OAuth.Token;
 
-    constructor() {
+    constructor(accessToken?: string, tokenSecret?: string) {
         this.apiKey = trelloConfig.apiKey;
-        this.token = trelloConfig.token;
-        this.baseUrl = trelloConfig.baseUrl;
+
+        if (accessToken && tokenSecret) {
+            this.token = {
+                key: accessToken,
+                secret: tokenSecret,
+            };
+        }
+
+        this.oauth = new OAuth({
+            consumer: {
+                key: this.apiKey,
+                secret: trelloConfig.token,
+            },
+            signature_method: "HMAC-SHA1",
+            hash_function(baseString: string, key: string) {
+                return crypto
+                    .createHmac("sha1", key)
+                    .update(baseString)
+                    .digest("base64");
+            },
+        });
     }
 
     private async request<T>(
         endpoint: string,
         options: RequestInit = {}
     ): Promise<T> {
-        const url = new URL(`${this.baseUrl}${endpoint}`);
-        url.searchParams.append("key", this.apiKey);
-        url.searchParams.append("token", this.token);
+        if (!this.token) {
+            throw new Error("User not authenticated with Trello");
+        }
 
-        const response = await fetch(url.toString(), {
+        const url = `${trelloConfig.baseUrl}${endpoint}`;
+        const requestData: OAuth.RequestData = {
+            url,
+            method: options.method || "GET",
+        };
+
+        const headers = this.oauth.toHeader(
+            this.oauth.authorize(requestData, this.token)
+        );
+
+        const response = await fetch(url, {
             ...options,
             headers: {
+                ...headers,
                 "Content-Type": "application/json",
                 ...options.headers,
             },
