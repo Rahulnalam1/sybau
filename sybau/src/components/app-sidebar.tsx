@@ -3,19 +3,12 @@
 import * as React from "react"
 import {
   AudioWaveform,
-  BookOpen,
-  Bot,
   Command,
-  Frame,
+  File,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -52,9 +45,9 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Untitled 1",
       url: "#",
-      icon: SquareTerminal,
+      icon: File,
       isActive: true,
       items: [
         {
@@ -72,9 +65,9 @@ const data = {
       ],
     },
     {
-      title: "Models",
+      title: "Untitled 2",
       url: "#",
-      icon: Bot,
+      icon: File,
       items: [
         {
           title: "Genesis",
@@ -91,9 +84,9 @@ const data = {
       ],
     },
     {
-      title: "Documentation",
+      title: "Untitled 3",
       url: "#",
-      icon: BookOpen,
+      icon: File,
       items: [
         {
           title: "Introduction",
@@ -114,9 +107,9 @@ const data = {
       ],
     },
     {
-      title: "Settings",
+      title: "Untitled 4",
       url: "#",
-      icon: Settings2,
+      icon: File,
       items: [
         {
           title: "General",
@@ -137,23 +130,24 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+  // You can remove the projects data if you won't be using it elsewhere
+  // projects: [
+  //   {
+  //     name: "Design Engineering",
+  //     url: "#",
+  //     icon: Frame,
+  //   },
+  //   {
+  //     name: "Sales & Marketing",
+  //     url: "#",
+  //     icon: PieChart,
+  //   },
+  //   {
+  //     name: "Travel",
+  //     url: "#",
+  //     icon: Map,
+  //   },
+  // ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -164,7 +158,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
