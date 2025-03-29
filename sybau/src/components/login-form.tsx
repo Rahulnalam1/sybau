@@ -1,6 +1,9 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 const GoogleIcon = () => (
   <Image
@@ -15,6 +18,14 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter()
+  
+  const handleGoogleLogin = () => {
+    // In a real application, you would handle Google authentication here
+    // For now, we'll just redirect to the workspace page
+    router.push("/workspace")
+  }
+  
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col gap-6">
@@ -27,7 +38,12 @@ export function LoginForm({
         <form>
           <div className="grid gap-6">
             <div className="flex flex-col gap-4">
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleGoogleLogin}
+                type="button"
+              >
                 <GoogleIcon />
                 <span className="ml-2">Login with Google</span>
               </Button>
