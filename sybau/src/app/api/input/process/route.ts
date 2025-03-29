@@ -1,3 +1,5 @@
+// POST api/input/process
+
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/api/middleware/authMiddleware"
 import { InputController } from "@/api/controllers/input/inputController"

@@ -17,38 +17,4 @@ export class InputController {
 
     return await parseMarkdownInput(markdown, platform, userId)
   }
-
-  async saveDraft(
-    userId: string,
-    markdown: string,
-    platform: SupportedPlatform
-  ): Promise<void> {
-    const supabase = await createClient()
-
-    const { error } = await supabase.from("drafts").insert({
-      user_id: userId,
-      markdown,
-      platform,
-    })
-
-    if (error) {
-      throw new Error("Failed to save draft: " + error.message)
-    }
-  }
-
-  async getUserDrafts(userId: string): Promise<any[]> {
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-      .from("drafts")
-      .select("*")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-
-    if (error) {
-      throw new Error("Failed to fetch drafts: " + error.message)
-    }
-
-    return data
-  }
 }
