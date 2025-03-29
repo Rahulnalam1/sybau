@@ -32,3 +32,17 @@ export interface CreateCardParams {
 export interface UpdateCardParams extends Partial<CreateCardParams> {
     cardId: string;
 }
+
+export type SupportedPlatform = "trello" | "jira" | "linear"
+export interface ParsedInput {
+  title: string
+  body: string
+  platform: SupportedPlatform
+  userId: string
+}
+
+export interface Task {
+    title: string
+    body: string
+    tags?: string[]
+}
