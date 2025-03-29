@@ -3,7 +3,7 @@ import {
     TrelloCard,
     CreateCardParams,
     UpdateCardParams,
-} from "../../controllers/trello/types";
+} from "@/types/types";
 import { trelloConfig } from "../../config/trello.config";
 
 export class TrelloService {

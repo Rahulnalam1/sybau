@@ -1,20 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { NextHandler } from "next-connect";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/api/auth/options"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function authMiddleware(
-    req: NextApiRequest,
-    res: NextApiResponse,
-    next: NextHandler
-) {
-    const session = await getServerSession(req, res, authOptions);
+export async function requireAuth(req: NextRequest) {
+  const session = await getServerSession(authOptions)
 
-    if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
-    // Add user to request for use in controllers
-    (req as any).user = session.user;
-    next();
+  return session
 }
