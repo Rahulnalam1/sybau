@@ -1,6 +1,6 @@
 ### Contributors
-Aryan Bahl
-Rahul Nalam
-Abhi Addagatla
-Srijan Bijjam
+Aryan Bahl \n
+Rahul Nalam \n
+Abhi Addagatla \n
+Srijan Bijjam \n
 
