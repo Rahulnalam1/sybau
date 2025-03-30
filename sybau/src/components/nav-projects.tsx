@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Folder,
   Forward,
@@ -34,6 +35,7 @@ export function NavProjects({
   }[]
 }) {
   const { isMobile } = useSidebar()
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -48,6 +50,12 @@ export function NavProjects({
               <a 
                 href={item.url}
                 className="flex items-center w-full hover:bg-accent/50 rounded-md"
+                onClick={(e) => {
+                  if (item.name === "Integrations") {
+                    e.preventDefault();
+                    setOpenDropdown(prev => prev === item.name ? null : item.name);
+                  }
+                }}
                 onMouseEnter={(e) => {
                   const icon = e.currentTarget.querySelector('.hover-icon');
                   if (icon) icon.classList.remove('opacity-0');
@@ -59,7 +67,11 @@ export function NavProjects({
               >
                 <item.icon />
                 <span>{item.name}</span>
-                <DropdownMenu>
+                <DropdownMenu open={item.name === "Integrations" ? openDropdown === item.name : undefined} onOpenChange={(open) => {
+                  if(item.name === "Integrations") {
+                    setOpenDropdown(open ? item.name : null);
+                  }
+                }}>
                   <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
                     <Ellipsis 
                       className="ml-auto h-4 w-4 opacity-0 transition-opacity duration-200 hover-icon cursor-pointer" 

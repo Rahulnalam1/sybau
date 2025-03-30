@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button"
 import {
 } from "@/components/ui/hover-card"
+import { toast } from "sonner"
+import { Editor } from "@tiptap/react"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -22,11 +24,16 @@ interface CommandOption {
   action: () => void;
 }
 
-export function EmailCommandButton() {
+interface EmailCommandButtonProps {
+  editor?: Editor | null;
+}
+
+export function EmailCommandButton({ editor }: EmailCommandButtonProps) {
   const [open, setOpen] = React.useState(false)
   const [width, setWidth] = React.useState("160px")
   const [isContentVisible, setIsContentVisible] = React.useState(true)
   const [selectedText, setSelectedText] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
   const buttonRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -74,12 +81,190 @@ export function EmailCommandButton() {
     return () => document.removeEventListener("selectionchange", checkSelection)
   }, [open])
 
+  const handleAutomateTasks = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: selectedText })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      console.log("Generated tasks:", result);
+      
+      toast.success(`Successfully created tasks`);
+      handleCancel();
+    } catch (error) {
+      console.error("Error automating tasks:", error);
+      toast.error("Failed to automate tasks");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleRewrite = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const rewritePrompt = `Rewrite the following text in a clear, professional manner while maintaining the original meaning: ${selectedText}`;
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: rewritePrompt })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(result.text || "");
+      
+      toast.success("Text rewritten successfully");
+      handleCancel();
+    } catch (error) {
+      console.error("Error rewriting text:", error);
+      toast.error("Failed to rewrite text");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleImprove = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const improvePrompt = `Improve the following text by enhancing clarity, fixing grammar issues, and making it more engaging: ${selectedText}`;
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: improvePrompt })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(result.text || "");
+      
+      toast.success("Text improved successfully");
+      handleCancel();
+    } catch (error) {
+      console.error("Error improving text:", error);
+      toast.error("Failed to improve text");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleExpand = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const expandPrompt = `Expand the following text by adding more details, examples, and elaborating on key points: ${selectedText}`;
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: expandPrompt })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(result.text || "");
+      
+      toast.success("Text expanded successfully");
+      handleCancel();
+    } catch (error) {
+      console.error("Error expanding text:", error);
+      toast.error("Failed to expand text");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleShorten = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const shortenPrompt = `Summarize the following text concisely while preserving the key points: ${selectedText}`;
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: shortenPrompt })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(result.text || "");
+      
+      toast.success("Text shortened successfully");
+      handleCancel();
+    } catch (error) {
+      console.error("Error shortening text:", error);
+      toast.error("Failed to shorten text");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleSummarize = async () => {
+    if (!selectedText || !editor) return
+    
+    try {
+      setLoading(true)
+      
+      const summarizePrompt = `Summarize the following text into key points while maintaining important information: ${selectedText}`;
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: summarizePrompt })
+      });
+      
+      if (!response.ok) throw new Error('Failed to process with Gemini');
+      
+      const { result } = await response.json();
+      
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(result.text || "");
+      
+      toast.success("Text summarized successfully");
+      handleCancel();
+    } catch (error) {
+      console.error("Error summarizing text:", error);
+      toast.error("Failed to summarize text");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const commandOptions: CommandOption[] = [
-    { icon: Cpu, label: "Automate tasks", action: () => console.log("Automate") },
-    { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },
-    { icon: Sparkles, label: "Improve", action: () => console.log("Improve") },
-    { icon: AArrowUp, label: "Expand", action: () => console.log("Expand") },
-    { icon: AArrowDown, label: "Shorten", action: () => console.log("Shorten") },
+    { icon: Cpu, label: loading ? "Processing..." : "Automate tasks", action: handleAutomateTasks },
+    { icon: WandSparkles, label: "Rewrite selection...", action: handleRewrite },
+    { icon: Sparkles, label: "Improve", action: handleImprove },
+    { icon: AArrowUp, label: "Expand", action: handleExpand },
+    { icon: AArrowDown, label: "Shorten", action: handleShorten },
+    { icon: Search, label: "Summarize", action: handleSummarize },
   ]
 
   const handleClick = () => {
@@ -157,6 +342,7 @@ export function EmailCommandButton() {
                       key={index}
                       onClick={option.action}
                       className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md text-left"
+                      disabled={loading}
                     >
                       <option.icon className="h-4 w-4 text-gray-500" />
                       <span className="text-[13px]">{option.label}</span>
