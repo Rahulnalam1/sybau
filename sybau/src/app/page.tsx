@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
+  // Redirect to authentication page
+  redirect('/authentication');
+  
+  // The code below won't run due to the redirect
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center">
