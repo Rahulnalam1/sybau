@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 // Define available integrations
 const integrations = {
@@ -90,6 +91,21 @@ export function IntegrationsDropdown() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event
+    const integrationId = active.id as string
+    
+    if (integrations[integrationId as keyof typeof integrations]) {
+      const integrationName = integrations[integrationId as keyof typeof integrations].label
+      
+      // Show toast notification
+      toast(`Integrated ${integrationName}`, {
+        description: `Connection to ${integrationName} has been established`,
+        action: {
+          label: "Undo",
+          onClick: () => console.log(`Configure ${integrationName} undo`),
+        },
+      })
+    }
+    
     console.log("Dragged integration:", active.id)
     setActiveId(null)
   }

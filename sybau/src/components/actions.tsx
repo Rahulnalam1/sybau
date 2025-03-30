@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import {
 } from "@/components/ui/hover-card"
+import { cn } from "@/lib/utils"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -26,6 +27,7 @@ export function EmailCommandButton() {
   const [width, setWidth] = React.useState("160px")
   const [isContentVisible, setIsContentVisible] = React.useState(true)
   const [selectedText, setSelectedText] = React.useState("")
+  const [activeIntegration, setActiveIntegration] = React.useState<string | null>(null)
   const buttonRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -106,6 +108,12 @@ export function EmailCommandButton() {
     }, 100)
   }
 
+  // This function can be called when an integration is dropped
+  const handleIntegrationDrop = (integrationId: string, integrationName: string) => {
+    setActiveIntegration(integrationName)
+    // You might want to do other things here
+  }
+
   const commonStyles = {
     width,
     WebkitTransition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
@@ -123,22 +131,43 @@ export function EmailCommandButton() {
     <>
       <div className="relative" ref={buttonRef}>
         {!open ? (
-          <Button
-            className="ml-auto bg-white hover:bg-gray-50 text-gray-900 rounded-[12px] border border-gray-200 shadow-sm flex items-center gap-4 px-5 py-3 text-sm h-11"
-            style={commonStyles}
-            onClick={handleClick}
-          >
-            <div className="flex items-center" style={contentStyles}>
-              <Zap className="h-4 w-4 mr-1" />
-              Actions
-              <span className="text-sm text-gray-500 ml-4">⌘K</span>
-            </div>
-          </Button>
+          <div className="relative">
+            {activeIntegration && (
+              <div className="absolute -top-4 left-0 right-0 bg-gray-100 text-xs px-2 py-1 rounded-t-md text-gray-600 border border-gray-200 border-bottom-0 flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 mr-1.5" />
+                {activeIntegration} connected
+              </div>
+            )}
+            <Button
+              className={cn(
+                "ml-auto bg-white hover:bg-gray-50 text-gray-900 rounded-[12px] border border-gray-200 shadow-sm flex items-center gap-4 px-5 py-3 text-sm h-11",
+                activeIntegration && "rounded-t-none border-top-0"
+              )}
+              style={commonStyles}
+              onClick={handleClick}
+            >
+              <div className="flex items-center" style={contentStyles}>
+                <Zap className="h-4 w-4 mr-1" />
+                Actions
+                <span className="text-sm text-gray-500 ml-4">⌘K</span>
+              </div>
+            </Button>
+          </div>
         ) : (
           <div
-            className="ml-auto bg-white text-gray-900 rounded-[12px] border border-gray-200 shadow-sm"
+            className={cn(
+              "ml-auto bg-white text-gray-900 rounded-[12px] border border-gray-200 shadow-sm",
+              activeIntegration && "rounded-t-none border-top-0"
+            )}
             style={commonStyles}
           >
+            {activeIntegration && (
+              <div className="bg-gray-100 text-xs px-2 py-1 text-gray-600 border-b border-gray-200 flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 mr-1.5" />
+                {activeIntegration} connected
+              </div>
+            )}
+            
             {selectedText ? (
               <div className="p-2" style={contentStyles}>
                 <div className="flex items-center px-2 py-1.5 mb-1 bg-gray-50 rounded-md">
