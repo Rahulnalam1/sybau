@@ -8,6 +8,7 @@ import {
   Search,
   AArrowDown,
   AArrowUp,
+  Cpu,
 } from "lucide-react"
 import {
 } from "@/components/ui/command"
@@ -78,6 +79,7 @@ export function EmailCommandButton() {
     { icon: Sparkles, label: "Improve", action: () => console.log("Improve") },
     { icon: AArrowUp, label: "Expand", action: () => console.log("Expand") },
     { icon: AArrowDown, label: "Shorten", action: () => console.log("Shorten") },
+    { icon: Cpu, label: "Automate tasks", action: () => console.log("Automate") },
   ]
 
   const handleClick = () => {
