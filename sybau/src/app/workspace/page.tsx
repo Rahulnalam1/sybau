@@ -81,7 +81,7 @@ export default function Page() {
               />
             </div>
             <div className="flex justify-center pb-4">
-              <EmailCommandButton />
+              <EmailCommandButton editor={editor}/>
             </div>
           </div>
         </SidebarInset>

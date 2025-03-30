@@ -19,6 +19,9 @@ import { toast } from "sonner"
 
 import { useIntegration } from "@/app/context/IntegrationContext"
 import { getAuthUrlForIntegration } from "@/lib/utils"
+import { supabase } from "@/api/lib/supabase-browser"
+
+import { Editor } from "@tiptap/react"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -32,7 +35,7 @@ type Integration = {
   iconSrc: any
 }
 
-export function EmailCommandButton() {
+export function EmailCommandButton({ editor } : { editor: Editor | null}) {
   const [open, setOpen] = React.useState(false)
   const [width, setWidth] = React.useState("160px")
   const [isContentVisible, setIsContentVisible] = React.useState(true)
@@ -90,21 +93,50 @@ export function EmailCommandButton() {
     {
       icon: Cpu,
       label: "Automate tasks",
-      action: () => {
+      action: async () => {
         if (!activeIntegration) {
-          toast.error("No integration selected")
-          return
+          toast.error("No integration selected");
+          return;
         }
-
-        // 🔐 Trigger auth logic (example)
-        const url = getAuthUrlForIntegration(activeIntegration.id);
-        if (!url) {
-          toast.error("Integration not supported")
-          return
+  
+        try {
+          const markdown = editor?.getHTML();
+          const platform = activeIntegration.id;
+  
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+  
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ markdown, platform }),
+          });
+  
+          const { id } = await res.json();
+          if (!id) throw new Error("No draft ID returned");
+  
+          // ✅ Use new getAuthUrlForIntegration helper
+          const authUrl = getAuthUrlForIntegration(platform, {
+            draftId: id,
+            platform,
+          });
+  
+          if (!authUrl) {
+            toast.error("Integration not supported");
+            return;
+          }
+  
+          toast(`Redirecting to ${activeIntegration.label}...`);
+          window.location.href = authUrl;
+  
+        } catch (err) {
+          toast.error("Failed to save draft before redirect");
+          console.error("OAuth redirect error:", err);
         }
-
-        toast(`Redirecting to ${activeIntegration.label}...`)
-        window.location.href = url
       },
     },
     { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },

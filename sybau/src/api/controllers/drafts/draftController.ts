@@ -64,6 +64,19 @@ export class DraftController {
     }
   }
 
+  async getDraftById(draftId: string, userId: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from("drafts")
+      .select("*")
+      .eq("id", draftId)
+      .eq("user_id", userId)
+      .single()
+  
+    if (error) throw new Error("Failed to fetch draft: " + error.message)
+    return data
+  }
+
   async submitDraftToPlatform(
     draftId: string,
     platform: SupportedPlatform,
