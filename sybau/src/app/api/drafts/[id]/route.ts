@@ -18,3 +18,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Failed to update draft" }, { status: 500 })
     }
 }
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await requireAuth(req)
+  if (session instanceof NextResponse) return session
+
+  try {
+    const draft = await draftController.getDraftById(params.id, session.user.id)
+    return NextResponse.json(draft)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Failed to fetch draft" }, { status: 500 })
+  }
+}

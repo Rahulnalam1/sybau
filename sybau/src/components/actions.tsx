@@ -166,7 +166,7 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
                 });
                 
                 // Replace the state parameter with our new state
-                urlObj.searchParams.set('state', encodeURIComponent(stateValue));
+                urlObj.searchParams.set('state', stateValue)
                 
                 // Get the updated URL string
                 url = urlObj.toString();
