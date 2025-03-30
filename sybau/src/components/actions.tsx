@@ -308,7 +308,7 @@ export function EmailCommandButton({ editor }: EmailCommandButtonProps) {
 
   return (
     <>
-      <div className="relative" ref={buttonRef}>
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1 z-10" ref={buttonRef}>
         {!open ? (
           <Button
             className="ml-auto bg-white hover:bg-gray-50 text-gray-900 rounded-[12px] border border-gray-200 shadow-sm flex items-center gap-4 px-5 py-3 text-sm h-11"
