@@ -27,7 +27,8 @@ export async function sendTasksToPlatform(
             title: task.title,
             description: task.description,
             teamId,
-            priority: task.priority
+            priority: task.priority,
+            
         });
     }
 }
