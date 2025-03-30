@@ -3,7 +3,7 @@ import { Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
 
-type SupportedPlatform = "trello" | "jira" | "linear"
+type SupportedPlatform = "jira" | "linear"
 
 export class InputController {
   async processInput(
