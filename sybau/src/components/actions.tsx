@@ -19,7 +19,7 @@ import { toast } from "sonner"
 import { useIntegration } from "@/app/context/IntegrationContext"
 import { getAuthUrlForIntegration } from "@/lib/utils"
 import { Editor } from "@tiptap/react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/api/lib/supabase-browser"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -91,109 +91,79 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
     {
       icon: Cpu,
       label: "Automate tasks",
-      action: () => {
+      action: async () => {
         if (!activeIntegration) {
           toast.error("No integration selected")
           return
         }
 
-        // Save editor content to Supabase before redirection
-        if (editor) {
-          const content = editor.getHTML()
-          // Save content to localStorage as a quick persistence mechanism
-          localStorage.setItem('editor_content', content)
-          
-          // Get current user from Supabase
-          const saveToSupabase = async () => {
-            const supabase = createClientComponentClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            if (user) {
-              // Extract a title from the content or use "Untitled Draft"
-              const title = content.split('\n')[0].replace(/<[^>]*>/g, '').trim().substring(0, 50) || "Untitled Draft"
-              
-              // Save the draft to Supabase
-              const { data, error } = await supabase
-                .from("drafts")
-                .upsert({
-                  user_id: user.id,
-                  markdown: content,
-                  title: title,
-                  platform: activeIntegration.id,
-                })
-                .select()
-              
-              if (error) {
-                console.error("Error saving draft:", error)
-                throw error
-              }
-              
-              console.log("Draft saved:", data)
-              
-              toast.success("Content saved")
-              
-              // Return the draft ID for the redirect
-              const draftId = data?.[0]?.id
-              console.log("Returning draft ID for redirect:", draftId)
-              return draftId
-            } else {
-              toast.error("You must be logged in to save content")
-              return
-            }
+        if (!editor) {
+          toast.error("Editor not loaded")
+          return
+        }
+
+        const content = editor.getHTML()
+        localStorage.setItem("editor_content", content)
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          const titleRes = await fetch("/api/gemini/title", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              text: content,
+            }),
+          }) 
+
+          const { title } = await titleRes.json()
+
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              markdown: content,
+              platform: activeIntegration.id,
+              title: title
+            }),
+          })
+
+          if (!res.ok) {
+            const { error } = await res.json()
+            throw new Error(error || "Failed to save draft")
           }
-          
-          saveToSupabase()
-            .then((draftId) => {
-              // After saving, proceed with auth
-              let url = getAuthUrlForIntegration(activeIntegration.id)
-              if (!url) {
-                toast.error("Integration not supported")
-                return
-              }
-              
-              // Append draft_id to state parameter
-              if (draftId) {
-                console.log(`Adding draft_id=${draftId} to redirect URL`)
-                
-                // Parse the existing URL
-                const urlObj = new URL(url);
-                
-                // Instead of adding as a query parameter, modify the state parameter to include the draft_id
-                // Create a state object with the draft_id and the original state
-                const stateValue = JSON.stringify({
-                  original: "random-state-value",
-                  draft_id: draftId
-                });
-                
-                // Replace the state parameter with our new state
-                urlObj.searchParams.set('state', stateValue)
-                
-                // Get the updated URL string
-                url = urlObj.toString();
-              } else {
-                console.warn("No draft ID available for redirect")
-              }
-              
-              console.log("Redirecting to:", url)
-              toast(`Redirecting to ${activeIntegration.label}...`)
-              window.location.href = url
-            })
-            .catch(err => {
-              console.error("Error saving content:", err)
-              toast.error("Error saving content")
-            })
-        } else {
-          // If no editor, just redirect
-          const url = getAuthUrlForIntegration(activeIntegration.id)
+
+          const { id: draftId } = await res.json()
+          toast.success("Draft saved")
+
+          // OAuth redirect
+          let url = getAuthUrlForIntegration(activeIntegration.id)
           if (!url) {
             toast.error("Integration not supported")
             return
           }
-          
-          toast(`Redirecting to ${activeIntegration.label}...`)
-          window.location.href = url
+
+          const urlObj = new URL(url)
+          const stateValue = JSON.stringify({
+            original: "random-state-value",
+            draft_id: draftId,
+          })
+
+          urlObj.searchParams.set("state", stateValue)
+          window.location.href = urlObj.toString()
+        } catch (err) {
+          console.error("Error saving draft:", err)
+          toast.error("Error saving content")
         }
-      },
+      }
     },
     { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },
     { icon: Sparkles, label: "Improve", action: () => console.log("Improve") },

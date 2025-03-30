@@ -11,10 +11,10 @@ export async function POST(req: NextRequest) {
   const session = await requireAuth(req)
   if (session instanceof NextResponse) return session
 
-  const { markdown, platform } = await req.json()
+  const { markdown, platform, title } = await req.json()
 
   try {
-    const id = await draftController.saveDraft(session.user.id, markdown, platform)
+    const id = await draftController.saveDraft(session.user.id, markdown, platform, title)
     return NextResponse.json({ success: true, id })
   } catch (error) {
     console.error(error)

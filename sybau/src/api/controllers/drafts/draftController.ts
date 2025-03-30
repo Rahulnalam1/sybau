@@ -10,7 +10,8 @@ export class DraftController {
   async saveDraft(
     userId: string,
     markdown: string,
-    platform: SupportedPlatform
+    platform: SupportedPlatform,
+    title: string
   ): Promise<void> {
     const supabase = await createClient()
 
@@ -20,6 +21,7 @@ export class DraftController {
         user_id: userId,
         markdown,
         platform,
+        title: title
       })
       .select("id") // 👈 this is key to return the inserted row
       .single()
