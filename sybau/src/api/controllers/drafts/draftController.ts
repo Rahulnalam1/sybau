@@ -1,5 +1,5 @@
 // src/api/controllers/drafts/draftController.ts
-import { Task } from "@/types/types"
+import { GeminiOutput, Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
 import { sendTasksToPlatform } from "@/api/services/platform/linearService"
@@ -62,7 +62,7 @@ export class DraftController {
     draftId: string,
     platform: SupportedPlatform,
     userId: string,
-    tasks: Task[],
+    tasks: GeminiOutput[],
     teamId: string
   ): Promise<void> {
     const supabase = await createClient()

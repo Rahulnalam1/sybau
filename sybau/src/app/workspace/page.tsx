@@ -23,6 +23,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { EmailCommandButton } from "@/components/actions"
 import { Toaster } from "sonner"
 
+import { IntegrationProvider } from "../context/IntegrationContext";
+
 export default function Page() {
   const editor = useEditor({
     extensions: [
@@ -55,34 +57,36 @@ export default function Page() {
   }, [])
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Workspace
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex-1">
-            <EditorContent 
-              editor={editor} 
-              className="prose max-w-none min-h-[500px] p-4 focus:outline-none" 
-            />
+    <IntegrationProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Workspace
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            <div className="flex-1">
+              <EditorContent 
+                editor={editor} 
+                className="prose max-w-none min-h-[500px] p-4 focus:outline-none" 
+              />
+            </div>
+            <div className="flex justify-center pb-4">
+              <EmailCommandButton />
+            </div>
           </div>
-          <div className="flex justify-center pb-4">
-            <EmailCommandButton />
-          </div>
-        </div>
-      </SidebarInset>
-      <Toaster position="bottom-right" />
-    </SidebarProvider>
+        </SidebarInset>
+        <Toaster position="bottom-right" />
+      </SidebarProvider>
+    </IntegrationProvider>
   )
 }

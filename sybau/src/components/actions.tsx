@@ -15,11 +15,21 @@ import {
 import { Button } from "@/components/ui/button"
 import {
 } from "@/components/ui/hover-card"
+import { toast } from "sonner"
+
+import { useIntegration } from "@/app/context/IntegrationContext"
+import { getAuthUrlForIntegration } from "@/lib/utils"
 
 interface CommandOption {
   icon: React.ElementType;
   label: string;
   action: () => void;
+}
+
+type Integration = {
+  id: string,
+  label: string,
+  iconSrc: any
 }
 
 export function EmailCommandButton() {
@@ -28,6 +38,8 @@ export function EmailCommandButton() {
   const [isContentVisible, setIsContentVisible] = React.useState(true)
   const [selectedText, setSelectedText] = React.useState("")
   const buttonRef = React.useRef<HTMLDivElement>(null)
+
+  const { activeIntegration } = useIntegration()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -75,7 +87,26 @@ export function EmailCommandButton() {
   }, [open])
 
   const commandOptions: CommandOption[] = [
-    { icon: Cpu, label: "Automate tasks", action: () => console.log("Automate") },
+    {
+      icon: Cpu,
+      label: "Automate tasks",
+      action: () => {
+        if (!activeIntegration) {
+          toast.error("No integration selected")
+          return
+        }
+
+        // 🔐 Trigger auth logic (example)
+        const url = getAuthUrlForIntegration(activeIntegration.id);
+        if (!url) {
+          toast.error("Integration not supported")
+          return
+        }
+
+        toast(`Redirecting to ${activeIntegration.label}...`)
+        window.location.href = url
+      },
+    },
     { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },
     { icon: Sparkles, label: "Improve", action: () => console.log("Improve") },
     { icon: AArrowUp, label: "Expand", action: () => console.log("Expand") },

@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 
+import { IntegrationProvider, useIntegration } from "@/app/context/IntegrationContext"
+
+
 // Import SVGs as React components
 // Option 1: Use Image component if using Next.js
 import Image from "next/image"
@@ -28,12 +31,12 @@ import JiraIconSrc from "../../public/jira.svg"
 // Define available integrations with proper icon handling
 const integrations = {
   "integration-1": { 
-    id: "integration-1", 
+    id: "jira", 
     label: "Jira", 
     iconSrc: JiraIconSrc 
   },
   "integration-2": { 
-    id: "integration-2", 
+    id: "linear", 
     label: "Linear", 
     iconSrc: LinearIconSrc 
   },
@@ -95,8 +98,14 @@ const DragOverlayContent = ({ label, iconSrc } : {
   )
 }
 
+type Integration = {
+  id: string,
+  label: string,
+  iconSrc: any
+}
 export function IntegrationsDropdown() {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const { setActiveIntegration } = useIntegration();
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -109,10 +118,14 @@ export function IntegrationsDropdown() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event
     console.log("Dragged integration:", active.id)
+    const integration = integrations[active.id as keyof typeof integrations]
+    if (!integration) return
     
     // Show toast notification when integration is dragged
-    const integration = integrations[active.id as keyof typeof integrations]
     if (integration) {
+      requestAnimationFrame(() => {
+        setActiveIntegration(integration)
+      })
       toast(`${integration.label} added to workspace`, {
         description: `${integration.label} integration has been successfully connected`,
         duration: Infinity,
