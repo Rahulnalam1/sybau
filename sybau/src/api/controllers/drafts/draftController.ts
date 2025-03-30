@@ -3,15 +3,14 @@ import { GeminiOutput, Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
 import { sendTasksToPlatform } from "@/api/services/platform/linearService"
-
-type SupportedPlatform = "jira" | "linear"
+import { SupportedPlatform } from "@/types/types"
 
 export class DraftController {
   async saveDraft(
     userId: string,
     markdown: string,
-    platform: SupportedPlatform,
-    title: string
+    platform?: SupportedPlatform,
+    title?: string
   ): Promise<void> {
     const supabase = await createClient()
 
@@ -72,7 +71,7 @@ export class DraftController {
     const { error } = await supabase
       .from("drafts")
       .update({ markdown, updated_at: new Date().toISOString() })
-      .match({ id: draftId, user_id: userId })
+      .match({ id: draftId })
   
     if (error) {
       throw new Error("Failed to update draft: " + error.message)
