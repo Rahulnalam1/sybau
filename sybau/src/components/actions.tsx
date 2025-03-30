@@ -270,10 +270,81 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
   }
 
   const commandOptions: CommandOption[] = [
-    {
-      icon: Cpu,
+    { icon: Cpu,
       label: "Automate tasks",
-      action: handleAutomateTasks
+      action: async () => {
+        if (!activeIntegration) {
+          toast.error("No integration selected")
+          return
+        }
+
+        if (!editor) {
+          toast.error("Editor not loaded")
+          return
+        }
+
+        const content = editor.getHTML()
+        localStorage.setItem("editor_content", content)
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          const titleRes = await fetch("/api/gemini/title", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              text: content,
+            }),
+          }) 
+
+          const { title } = await titleRes.json()
+
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              markdown: content,
+              platform: activeIntegration.id,
+              title: title
+            }),
+          })
+
+          if (!res.ok) {
+            const { error } = await res.json()
+            throw new Error(error || "Failed to save draft")
+          }
+
+          const { id: draftId } = await res.json()
+          toast.success("Draft saved")
+
+          // OAuth redirect
+          let url = getAuthUrlForIntegration(activeIntegration.id)
+          if (!url) {
+            toast.error("Integration not supported")
+            return
+          }
+
+          const urlObj = new URL(url)
+          const stateValue = JSON.stringify({
+            original: "random-state-value",
+            draft_id: draftId,
+          })
+
+          urlObj.searchParams.set("state", stateValue)
+          window.location.href = urlObj.toString()
+        } catch (err) {
+          console.error("Error saving draft:", err)
+          toast.error("Error saving content")
+        }
+      }
     },
     { icon: WandSparkles, label: "Rewrite selection...", action: handleRewrite },
     { icon: Sparkles, label: "Improve", action: handleImprove },
