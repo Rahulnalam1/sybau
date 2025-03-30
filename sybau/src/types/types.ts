@@ -54,3 +54,18 @@ export interface Draft {
     platform: string;
     createdAt: string;
 }
+
+// same as the Linear Input
+export interface GeminiOutput {
+    title: string;
+    description: string;
+    priority: number;
+    dueDate?: string;
+}
+
+export interface JiraInput {
+    summary: string;
+    description: string;
+    projectId: string;
+    issueTypeId: string;
+}
