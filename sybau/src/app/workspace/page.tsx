@@ -1,6 +1,10 @@
 "use client"
 
+import { useEditor, EditorContent } from "@tiptap/react";
+import Placeholder from "@tiptap/extension-placeholder";
+import StarterKit from "@tiptap/starter-kit";
 import { AppSidebar } from "@/components/app-sidebar"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,8 +20,19 @@ import {
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { EmailCommandButton } from "@/components/actions"
 
 export default function Page() {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Start writing...',
+      }),
+    ],
+    content: '',
+  })
+
 
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -55,6 +70,15 @@ export default function Page() {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="flex-1">
+            <EditorContent 
+              editor={editor} 
+              className="prose max-w-none min-h-[500px] p-4 focus:outline-none" 
+            />
+          </div>
+          <div className="flex justify-center pb-4">
+            <EmailCommandButton />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
