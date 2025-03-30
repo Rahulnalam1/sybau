@@ -75,11 +75,11 @@ export function EmailCommandButton() {
   }, [open])
 
   const commandOptions: CommandOption[] = [
+    { icon: Cpu, label: "Automate tasks", action: () => console.log("Automate") },
     { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },
     { icon: Sparkles, label: "Improve", action: () => console.log("Improve") },
     { icon: AArrowUp, label: "Expand", action: () => console.log("Expand") },
     { icon: AArrowDown, label: "Shorten", action: () => console.log("Shorten") },
-    { icon: Cpu, label: "Automate tasks", action: () => console.log("Automate") },
   ]
 
   const handleClick = () => {

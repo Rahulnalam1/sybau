@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from "react"
-import { ToyBrick } from "lucide-react"
 import {
   DndContext,
   DragEndEvent,
@@ -18,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 // Import SVGs as React components
 // Option 1: Use Image component if using Next.js
@@ -109,6 +109,23 @@ export function IntegrationsDropdown() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event
     console.log("Dragged integration:", active.id)
+    
+    // Show toast notification when integration is dragged
+    const integration = integrations[active.id as keyof typeof integrations]
+    if (integration) {
+      toast(`${integration.label} added to workspace`, {
+        description: `${integration.label} integration has been successfully connected`,
+        duration: Infinity,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            console.log(`Removed ${integration.label} integration`)
+            // Logic to remove the integration would go here
+          },
+        },
+      })
+    }
+    
     setActiveId(null)
   }
 

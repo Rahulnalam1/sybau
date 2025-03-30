@@ -21,6 +21,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { EmailCommandButton } from "@/components/actions"
+import { Toaster } from "sonner"
 
 export default function Page() {
   const editor = useEditor({
@@ -81,6 +82,7 @@ export default function Page() {
           </div>
         </div>
       </SidebarInset>
+      <Toaster position="bottom-right" />
     </SidebarProvider>
   )
 }
