@@ -155,7 +155,7 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
     try {
       setLoading(true)
       
-      const improvePrompt = `Improve the following text by enhancing clarity, fixing grammar issues, and making it more engaging: ${selectedText}`;
+      const improvePrompt = `Improve the following text: ${selectedText}`;
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -185,7 +185,7 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
     try {
       setLoading(true)
       
-      const expandPrompt = `Expand the following text by adding more details, examples, and elaborating on key points: ${selectedText}`;
+      const expandPrompt = `Expand the following text with more details: ${selectedText}`;
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,84 +273,13 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
     {
       icon: Cpu,
       label: "Automate tasks",
-      action: async () => {
-        if (!activeIntegration) {
-          toast.error("No integration selected")
-          return
-        }
-
-        if (!editor) {
-          toast.error("Editor not loaded")
-          return
-        }
-
-        const content = editor.getHTML()
-        localStorage.setItem("editor_content", content)
-
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-
-          const titleRes = await fetch("/api/gemini/title", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token}`,
-            },
-            body: JSON.stringify({
-              text: content,
-            }),
-          }) 
-
-          const { title } = await titleRes.json()
-
-          const res = await fetch("/api/drafts", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token}`,
-            },
-            body: JSON.stringify({
-              markdown: content,
-              platform: activeIntegration.id,
-              title: title
-            }),
-          })
-
-          if (!res.ok) {
-            const { error } = await res.json()
-            throw new Error(error || "Failed to save draft")
-          }
-
-          const { id: draftId } = await res.json()
-          toast.success("Draft saved")
-
-          // OAuth redirect
-          let url = getAuthUrlForIntegration(activeIntegration.id)
-          if (!url) {
-            toast.error("Integration not supported")
-            return
-          }
-
-          const urlObj = new URL(url)
-          const stateValue = JSON.stringify({
-            original: "random-state-value",
-            draft_id: draftId,
-          })
-
-          urlObj.searchParams.set("state", stateValue)
-          window.location.href = urlObj.toString()
-        } catch (err) {
-          console.error("Error saving draft:", err)
-          toast.error("Error saving content")
-        }
-      }
+      action: handleAutomateTasks
     },
     { icon: WandSparkles, label: "Rewrite selection...", action: handleRewrite },
-    { icon: Sparkles, label: "Improve", action: () => handleImprove },
-    { icon: AArrowUp, label: "Expand", action: () => handleExpand },
-    { icon: AArrowDown, label: "Shorten", action: () => handleShorten },
+    { icon: Sparkles, label: "Improve", action: handleImprove },
+    { icon: AArrowUp, label: "Expand", action: handleExpand },
+    { icon: AArrowDown, label: "Shorten", action: handleShorten },
+    { icon: AArrowDown, label: "Summarize", action: handleSummarize },
   ]
 
   const handleClick = () => {

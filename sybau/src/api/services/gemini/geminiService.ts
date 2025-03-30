@@ -10,7 +10,7 @@ export class GeminiService {
     async generateTasks(text: string): Promise<any> {
         try {
             const model = this.genAI.getGenerativeModel({
-                model: "gemini-1.5-flash", // or "gemini-pro"
+                model: "gemini-1.5-pro", // or "gemini-pro"
             });
 
             // Check if this is a task creation request or a text modification request
