@@ -1,41 +1,32 @@
 import { Task, SupportedPlatform } from "@/types/types"
-import { LinearService } from "../linear/linearServices"
-import { getLinearApiKeyForUser } from "@/api/utils/userKeys" // or wherever you store the key
+import { LinearOAuthService } from "../linear/linearOAuthService"
+
+type SubmissionOptions = {
+  teamId: string
+  projectId?: string
+  assigneeId?: string
+  priority?: number
+}
 
 export async function sendTasksToPlatform(
   tasks: Task[],
   platform: SupportedPlatform,
-  userId: string,
-  options?: {
-    teamId: string
-    projectId?: string
-    assigneeId?: string
-    priority?: number
-  }
+  userId: string, // still useful for logs or future per-user metadata
+  teamId: string
 ): Promise<void> {
   if (platform !== "linear") {
-    throw new Error(`Platform ${platform} is not supported yet.`)
+    throw new Error(`Unsupported platform: ${platform}`)
   }
 
-  if (!options?.teamId) {
-    throw new Error("Missing teamId for Linear")
-  }
+  if (!teamId) throw new Error("Missing teamId for Linear submission")
 
-  const apiKey = await getLinearApiKeyForUser(userId)
-  if (!apiKey) {
-    throw new Error("No Linear API key found for user")
-  }
-
-  const linear = new LinearService(apiKey)
+  const linear = new LinearOAuthService()
 
   for (const task of tasks) {
     await linear.createIssue({
       title: task.title,
       description: task.body,
-      teamId: options.teamId,
-      projectId: options.projectId,
-      assigneeId: options.assigneeId,
-      priority: options.priority,
+      teamId,
     })
   }
 }

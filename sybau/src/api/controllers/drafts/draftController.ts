@@ -2,6 +2,7 @@
 import { Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
+import { sendTasksToPlatform } from "@/api/services/platform/linearService"
 
 type SupportedPlatform = "trello" | "jira" | "linear"
 
