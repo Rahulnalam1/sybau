@@ -6,6 +6,7 @@ import {
   Command,
   File,
   GalleryVerticalEnd,
+  Blocks,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -18,6 +19,9 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { NavProjects } from "@/components/nav-projects"
+import { useDrafts } from "@/hooks/use-drafts";
+import { NavDrafts } from "./drafts/nav-drafts"
 
 // This is sample data.
 const data = {
@@ -43,12 +47,18 @@ const data = {
       plan: "Free",
     },
   ],
+  projects: [
+    {
+      name: "Integrations",
+      url: "#",
+      icon: Blocks,
+    }
+  ],
   navMain: [
     {
       title: "Untitled 1",
       url: "#",
       icon: File,
-      isActive: true,
       items: [
         {
           title: "History",
@@ -151,13 +161,16 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { drafts, loading } = useDrafts()
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavProjects projects={data.projects} />
+        {!loading && <NavDrafts drafts={drafts} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

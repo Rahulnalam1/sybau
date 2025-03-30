@@ -47,3 +47,10 @@ export interface Task {
     body: string;
     tags?: string[];
 }
+
+export interface Draft {
+    id: string;
+    title: string;
+    platform: string;
+    createdAt: string;
+}

@@ -17,6 +17,11 @@ export default function Home() {
                   Connect Linear Account
                 </Link>
               </Button>
+              <Button asChild>
+                <Link href="/integrate/jira">
+                  Connect JIRA Account
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
