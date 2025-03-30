@@ -10,6 +10,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { EmailCommandButton } from "@/components/actions"
 
 export default function Page() {
   return (
@@ -29,6 +30,10 @@ export default function Page() {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="flex-1" />
+          <div className="flex justify-center pb-4">
+            <EmailCommandButton />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
