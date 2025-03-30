@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
   const { markdown, platform } = await req.json()
 
   try {
-    await draftController.saveDraft(session.user.id, markdown, platform)
-    return NextResponse.json({ success: true })
+    const id = await draftController.saveDraft(session.user.id, markdown, platform)
+    return NextResponse.json({ success: true, id })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: "Failed to save draft" }, { status: 500 })

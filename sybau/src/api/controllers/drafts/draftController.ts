@@ -14,15 +14,21 @@ export class DraftController {
   ): Promise<void> {
     const supabase = await createClient()
 
-    const { error } = await supabase.from("drafts").insert({
-      user_id: userId,
-      markdown,
-      platform,
-    })
-
-    if (error) {
-      throw new Error("Failed to save draft: " + error.message)
+    const { data, error } = await supabase
+      .from("drafts")
+      .insert({
+        user_id: userId,
+        markdown,
+        platform,
+      })
+      .select("id") // 👈 this is key to return the inserted row
+      .single()
+  
+    if (error || !data) {
+      throw new Error("Failed to save draft: " + (error?.message || "No data returned"))
     }
+  
+    return data.id
   }
 
   async getUserDrafts(userId: string): Promise<any[]> {

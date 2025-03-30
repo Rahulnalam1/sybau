@@ -30,12 +30,12 @@ import JiraIconSrc from "../../public/jira.svg"
 
 // Define available integrations with proper icon handling
 const integrations = {
-  "integration-1": { 
+  "jira": { 
     id: "jira", 
     label: "Jira", 
     iconSrc: JiraIconSrc 
   },
-  "integration-2": { 
+  "linear": { 
     id: "linear", 
     label: "Linear", 
     iconSrc: LinearIconSrc 
@@ -118,7 +118,7 @@ export function IntegrationsDropdown() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event
     console.log("Dragged integration:", active.id)
-    const integration = integrations[active.id as keyof typeof integrations]
+    const integration = Object.values(integrations).find(int => int.id === active.id)
     if (!integration) return
     
     // Show toast notification when integration is dragged
