@@ -33,7 +33,7 @@ export function NavDrafts({ drafts }: { drafts: Draft[] }) {
               className="transition-colors duration-150 hover:delay-200 relative"
             >
               <Link
-                href={`/drafts/${draft.id}`}
+                href={`/workspace/${draft.id}`}
                 className="flex items-center w-full hover:bg-accent/50 rounded-md"
                 onMouseEnter={(e) => {
                   const icon = e.currentTarget.querySelector(".hover-icon")

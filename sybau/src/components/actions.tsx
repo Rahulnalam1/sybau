@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button"
 import {
 } from "@/components/ui/hover-card"
 import { toast } from "sonner"
+import { useIntegration } from "@/app/context/IntegrationContext"
+import { getAuthUrlForIntegration } from "@/lib/utils"
 import { Editor } from "@tiptap/react"
+import { supabase } from "@/api/lib/supabase-browser"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -24,17 +27,25 @@ interface CommandOption {
   action: () => void;
 }
 
+type Integration = {
+  id: string,
+  label: string,
+  iconSrc: any
+}
+
 interface EmailCommandButtonProps {
   editor?: Editor | null;
 }
 
-export function EmailCommandButton({ editor }: EmailCommandButtonProps) {
+export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
   const [open, setOpen] = React.useState(false)
   const [width, setWidth] = React.useState("160px")
   const [isContentVisible, setIsContentVisible] = React.useState(true)
   const [selectedText, setSelectedText] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const buttonRef = React.useRef<HTMLDivElement>(null)
+
+  const { activeIntegration } = useIntegration()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -259,12 +270,87 @@ export function EmailCommandButton({ editor }: EmailCommandButtonProps) {
   }
 
   const commandOptions: CommandOption[] = [
-    { icon: Cpu, label: loading ? "Processing..." : "Automate tasks", action: handleAutomateTasks },
+    {
+      icon: Cpu,
+      label: "Automate tasks",
+      action: async () => {
+        if (!activeIntegration) {
+          toast.error("No integration selected")
+          return
+        }
+
+        if (!editor) {
+          toast.error("Editor not loaded")
+          return
+        }
+
+        const content = editor.getHTML()
+        localStorage.setItem("editor_content", content)
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          const titleRes = await fetch("/api/gemini/title", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              text: content,
+            }),
+          }) 
+
+          const { title } = await titleRes.json()
+
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              markdown: content,
+              platform: activeIntegration.id,
+              title: title
+            }),
+          })
+
+          if (!res.ok) {
+            const { error } = await res.json()
+            throw new Error(error || "Failed to save draft")
+          }
+
+          const { id: draftId } = await res.json()
+          toast.success("Draft saved")
+
+          // OAuth redirect
+          let url = getAuthUrlForIntegration(activeIntegration.id)
+          if (!url) {
+            toast.error("Integration not supported")
+            return
+          }
+
+          const urlObj = new URL(url)
+          const stateValue = JSON.stringify({
+            original: "random-state-value",
+            draft_id: draftId,
+          })
+
+          urlObj.searchParams.set("state", stateValue)
+          window.location.href = urlObj.toString()
+        } catch (err) {
+          console.error("Error saving draft:", err)
+          toast.error("Error saving content")
+        }
+      }
+    },
     { icon: WandSparkles, label: "Rewrite selection...", action: handleRewrite },
-    { icon: Sparkles, label: "Improve", action: handleImprove },
-    { icon: AArrowUp, label: "Expand", action: handleExpand },
-    { icon: AArrowDown, label: "Shorten", action: handleShorten },
-    { icon: Search, label: "Summarize", action: handleSummarize },
+    { icon: Sparkles, label: "Improve", action: () => handleImprove },
+    { icon: AArrowUp, label: "Expand", action: () => handleExpand },
+    { icon: AArrowDown, label: "Shorten", action: () => handleShorten },
   ]
 
   const handleClick = () => {

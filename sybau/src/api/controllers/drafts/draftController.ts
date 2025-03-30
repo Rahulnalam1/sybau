@@ -1,5 +1,5 @@
 // src/api/controllers/drafts/draftController.ts
-import { Task } from "@/types/types"
+import { GeminiOutput, Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
 import { sendTasksToPlatform } from "@/api/services/platform/linearService"
@@ -10,19 +10,27 @@ export class DraftController {
   async saveDraft(
     userId: string,
     markdown: string,
-    platform: SupportedPlatform
+    platform: SupportedPlatform,
+    title: string
   ): Promise<void> {
     const supabase = await createClient()
 
-    const { error } = await supabase.from("drafts").insert({
-      user_id: userId,
-      markdown,
-      platform,
-    })
-
-    if (error) {
-      throw new Error("Failed to save draft: " + error.message)
+    const { data, error } = await supabase
+      .from("drafts")
+      .insert({
+        user_id: userId,
+        markdown,
+        platform,
+        title: title
+      })
+      .select("id") // 👈 this is key to return the inserted row
+      .single()
+  
+    if (error || !data) {
+      throw new Error("Failed to save draft: " + (error?.message || "No data returned"))
     }
+  
+    return data.id
   }
 
   async getUserDrafts(userId: string): Promise<any[]> {
@@ -38,6 +46,19 @@ export class DraftController {
       throw new Error("Failed to fetch drafts: " + error.message)
     }
 
+    return data
+  }
+
+  async getDraftById(draftId: string, userId: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from("drafts")
+      .select("*")
+      .eq("id", draftId)
+      .eq("user_id", userId)
+      .single()
+  
+    if (error) throw new Error("Failed to fetch draft: " + error.message)
     return data
   }
 
@@ -62,7 +83,7 @@ export class DraftController {
     draftId: string,
     platform: SupportedPlatform,
     userId: string,
-    tasks: Task[],
+    tasks: GeminiOutput[],
     teamId: string
   ): Promise<void> {
     const supabase = await createClient()

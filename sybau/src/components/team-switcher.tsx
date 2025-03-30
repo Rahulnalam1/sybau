@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useRouter } from "next/navigation"
 
 export function TeamSwitcher({
 
@@ -33,6 +34,7 @@ export function TeamSwitcher({
     plan: ""
   }
   const [activeTeam] = React.useState(defaultTeam)
+  const router = useRouter();
 
   if (!activeTeam) {
     return null
@@ -68,7 +70,7 @@ export function TeamSwitcher({
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Create a new note 
             </DropdownMenuLabel>
-            <DropdownMenuItem className="gap-2 p-2">
+            <DropdownMenuItem className="gap-2 p-2" onSelect={() => router.push("/workspace")}>
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>

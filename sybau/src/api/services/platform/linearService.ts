@@ -1,4 +1,4 @@
-import { Task, SupportedPlatform } from "@/types/types";
+import { Task, SupportedPlatform, GeminiOutput } from "@/types/types";
 import { LinearOAuthService } from "../linear/linearOAuthService";
 
 type SubmissionOptions = {
@@ -9,7 +9,7 @@ type SubmissionOptions = {
 };
 
 export async function sendTasksToPlatform(
-    tasks: Task[],
+    tasks: GeminiOutput[],
     platform: SupportedPlatform,
     userId: string, // still useful for logs or future per-user metadata
     teamId: string
@@ -25,8 +25,9 @@ export async function sendTasksToPlatform(
     for (const task of tasks) {
         await linear.createIssue({
             title: task.title,
-            description: task.body,
+            description: task.description,
             teamId,
+            priority: task.priority
         });
     }
 }
