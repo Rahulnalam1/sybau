@@ -16,9 +16,10 @@ import { Button } from "@/components/ui/button"
 import {
 } from "@/components/ui/hover-card"
 import { toast } from "sonner"
-
 import { useIntegration } from "@/app/context/IntegrationContext"
 import { getAuthUrlForIntegration } from "@/lib/utils"
+import { Editor } from "@tiptap/react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 interface CommandOption {
   icon: React.ElementType;
@@ -32,7 +33,7 @@ type Integration = {
   iconSrc: any
 }
 
-export function EmailCommandButton() {
+export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
   const [open, setOpen] = React.useState(false)
   const [width, setWidth] = React.useState("160px")
   const [isContentVisible, setIsContentVisible] = React.useState(true)
@@ -96,15 +97,102 @@ export function EmailCommandButton() {
           return
         }
 
-        // 🔐 Trigger auth logic (example)
-        const url = getAuthUrlForIntegration(activeIntegration.id);
-        if (!url) {
-          toast.error("Integration not supported")
-          return
+        // Save editor content to Supabase before redirection
+        if (editor) {
+          const content = editor.getHTML()
+          // Save content to localStorage as a quick persistence mechanism
+          localStorage.setItem('editor_content', content)
+          
+          // Get current user from Supabase
+          const saveToSupabase = async () => {
+            const supabase = createClientComponentClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            
+            if (user) {
+              // Extract a title from the content or use "Untitled Draft"
+              const title = content.split('\n')[0].replace(/<[^>]*>/g, '').trim().substring(0, 50) || "Untitled Draft"
+              
+              // Save the draft to Supabase
+              const { data, error } = await supabase
+                .from("drafts")
+                .upsert({
+                  user_id: user.id,
+                  markdown: content,
+                  title: title,
+                  platform: activeIntegration.id,
+                })
+                .select()
+              
+              if (error) {
+                console.error("Error saving draft:", error)
+                throw error
+              }
+              
+              console.log("Draft saved:", data)
+              
+              toast.success("Content saved")
+              
+              // Return the draft ID for the redirect
+              const draftId = data?.[0]?.id
+              console.log("Returning draft ID for redirect:", draftId)
+              return draftId
+            } else {
+              toast.error("You must be logged in to save content")
+              return
+            }
+          }
+          
+          saveToSupabase()
+            .then((draftId) => {
+              // After saving, proceed with auth
+              let url = getAuthUrlForIntegration(activeIntegration.id)
+              if (!url) {
+                toast.error("Integration not supported")
+                return
+              }
+              
+              // Append draft_id to state parameter
+              if (draftId) {
+                console.log(`Adding draft_id=${draftId} to redirect URL`)
+                
+                // Parse the existing URL
+                const urlObj = new URL(url);
+                
+                // Instead of adding as a query parameter, modify the state parameter to include the draft_id
+                // Create a state object with the draft_id and the original state
+                const stateValue = JSON.stringify({
+                  original: "random-state-value",
+                  draft_id: draftId
+                });
+                
+                // Replace the state parameter with our new state
+                urlObj.searchParams.set('state', encodeURIComponent(stateValue));
+                
+                // Get the updated URL string
+                url = urlObj.toString();
+              } else {
+                console.warn("No draft ID available for redirect")
+              }
+              
+              console.log("Redirecting to:", url)
+              toast(`Redirecting to ${activeIntegration.label}...`)
+              window.location.href = url
+            })
+            .catch(err => {
+              console.error("Error saving content:", err)
+              toast.error("Error saving content")
+            })
+        } else {
+          // If no editor, just redirect
+          const url = getAuthUrlForIntegration(activeIntegration.id)
+          if (!url) {
+            toast.error("Integration not supported")
+            return
+          }
+          
+          toast(`Redirecting to ${activeIntegration.label}...`)
+          window.location.href = url
         }
-
-        toast(`Redirecting to ${activeIntegration.label}...`)
-        window.location.href = url
       },
     },
     { icon: WandSparkles, label: "Rewrite selection...", action: () => console.log("Rewrite") },

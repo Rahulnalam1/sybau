@@ -50,9 +50,12 @@ export interface Task {
 
 export interface Draft {
     id: string;
-    title: string;
+    user_id: string;
+    markdown: string;
+    title?: string;
     platform: string;
-    createdAt: string;
+    created_at: string;
+    updated_at: string;
 }
 
 // same as the Linear Input

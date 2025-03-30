@@ -6,7 +6,31 @@ export async function GET(request: Request) {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
-    if (!state || state !== 'random-state-value') {
+    // Extract draft_id from state if it's in JSON format
+    let stateObj: any = null;
+    let validState = false;
+    let draftId: string | null = null;
+    
+    try {
+      if (state) {
+        // Decode URI component and parse JSON
+        const decodedState = decodeURIComponent(state);
+        stateObj = JSON.parse(decodedState);
+        
+        if (stateObj && stateObj.original === 'random-state-value') {
+          validState = true;
+          draftId = stateObj.draft_id || null;
+          console.log("Extracted draft ID from state:", draftId);
+        }
+      }
+    } catch (e) {
+      // If not JSON or invalid, check if it's the simple state string
+      validState = state === 'random-state-value';
+      console.log("State is not in JSON format, using direct comparison");
+    }
+
+    if (!validState) {
+      console.log("Invalid state:", state);
       return NextResponse.redirect(new URL('/workspace?error=invalid_state', request.url));
     }
 
@@ -38,7 +62,16 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
     const { access_token, refresh_token } = tokenData;
 
-    const response = NextResponse.redirect(new URL('/workspace', request.url));
+    // Get draft_id from the parsed state object
+    console.log("Draft ID for redirection:", draftId);
+    
+    // Redirect to team selection with draft ID if available
+    const redirectUrl = draftId 
+      ? new URL(`/team-selection?draft_id=${draftId}`, request.url)
+      : new URL('/team-selection', request.url);
+      
+    console.log("Redirecting to:", redirectUrl.toString());
+    const response = NextResponse.redirect(redirectUrl);
 
     response.cookies.set({
       name: 'linear_access_token',
