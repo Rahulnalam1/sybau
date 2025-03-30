@@ -2,6 +2,7 @@
 import { Task } from "@/types/types"
 import { parseMarkdownInput } from "@/api/services/input/inputService"
 import { createClient } from "@/api/lib/supabase"
+import { sendTasksToPlatform } from "@/api/services/platform/linearService"
 
 type SupportedPlatform = "trello" | "jira" | "linear"
 
@@ -60,28 +61,34 @@ export class DraftController {
   async submitDraftToPlatform(
     draftId: string,
     platform: SupportedPlatform,
-    userId: string
-  ): Promise<Task[]> {
+    userId: string,
+    tasks: Task[],
+    teamId: string
+  ): Promise<void> {
     const supabase = await createClient()
-  
-    const { data: draft, error } = await supabase
+
+    // Optional: validate ownership
+    const { error: findError } = await supabase
       .from("drafts")
-      .select("markdown")
+      .select("id")
       .match({ id: draftId, user_id: userId })
       .single()
-  
-    if (error || !draft) {
+
+    if (findError) {
       throw new Error("Draft not found or unauthorized")
     }
-  
-    const tasks = await parseMarkdownInput(draft.markdown, platform, userId)
-  
-    // Optionally mark draft as submitted
-    await supabase
+
+    // Send tasks to the chosen platform
+    await sendTasksToPlatform(tasks, platform, userId, teamId)
+
+    // Mark draft as submitted
+    const { error: updateError } = await supabase
       .from("drafts")
       .update({ platform, updated_at: new Date().toISOString() })
       .eq("id", draftId)
-  
-    return tasks
+
+    if (updateError) {
+      throw new Error("Failed to update draft with platform info")
+    }
   }
 }
