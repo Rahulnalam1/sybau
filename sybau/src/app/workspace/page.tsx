@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import { AppSidebar } from "@/components/app-sidebar"
+import { Toaster } from "sonner"
 
 import {
   Breadcrumb,
@@ -57,6 +58,7 @@ export default function Page() {
           </div>
         </div>
       </SidebarInset>
+      <Toaster position="bottom-right" />
     </SidebarProvider>
   )
 }

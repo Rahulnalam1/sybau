@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 // Define available integrations
 const integrations = {
@@ -91,6 +92,23 @@ export function IntegrationsDropdown() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event
     console.log("Dragged integration:", active.id)
+    
+    // Show toast notification when integration is dragged
+    const integration = integrations[active.id as keyof typeof integrations]
+    if (integration) {
+      toast(`${integration.label} added to workspace`, {
+        description: `${integration.label} integration has been successfully connected`,
+        duration: Infinity, // Make the toast stay until dismissed
+        action: {
+          label: "Undo",
+          onClick: () => {
+            console.log(`Removed ${integration.label} integration`)
+            // Logic to remove the integration would go here
+          },
+        },
+      })
+    }
+    
     setActiveId(null)
   }
 
