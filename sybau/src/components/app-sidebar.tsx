@@ -6,6 +6,7 @@ import {
   Command,
   File,
   GalleryVerticalEnd,
+  Blocks,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -18,6 +19,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { NavProjects } from "@/components/nav-projects"
 
 // This is sample data.
 const data = {
@@ -43,12 +45,18 @@ const data = {
       plan: "Free",
     },
   ],
+  projects: [
+    {
+      name: "Integrations",
+      url: "#",
+      icon: Blocks,
+    }
+  ],
   navMain: [
     {
       title: "Untitled 1",
       url: "#",
       icon: File,
-      isActive: true,
       items: [
         {
           title: "History",
@@ -157,6 +165,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
+        <NavProjects projects={data.projects} />
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
