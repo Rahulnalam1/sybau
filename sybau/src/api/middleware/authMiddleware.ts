@@ -1,11 +1,11 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/api/auth/options"
-import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/api/lib/supabase"
+import { NextResponse, type NextRequest } from "next/server"
 
 export async function requireAuth(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

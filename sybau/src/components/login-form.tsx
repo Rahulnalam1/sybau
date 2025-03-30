@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/api/lib/supabase-browser"
 
 const GoogleIcon = () => (
   <Image
@@ -20,10 +21,13 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter()
   
-  const handleGoogleLogin = () => {
-    // In a real application, you would handle Google authentication here
-    // For now, we'll just redirect to the workspace page
-    router.push("/workspace")
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://localhost:3000/workspace',
+      },
+    }) 
   }
   
   return (
