@@ -1,9 +1,9 @@
-import { getJiraAccessToken } from "@/lib/jira-auth";
+import { getJiraAccessToken, refreshJiraToken } from "@/lib/jira-auth";
 
 export class JiraOAuthService {
     // JIRA doesn't have an official SDK like Linear's, so we'll use direct API calls
 
-    private async getHeaders() {
+    private async getHeaders(refreshOnFailure = true) {
         const accessToken = await getJiraAccessToken();
         if (!accessToken) {
             throw new Error("No JIRA access token found");
@@ -17,7 +17,7 @@ export class JiraOAuthService {
     }
 
     private async fetchWithAuth(url: string, options: RequestInit = {}) {
-        const headers = await this.getHeaders();
+        let headers = await this.getHeaders();
 
         console.log(
             `JiraService: Making ${options.method || "GET"} request to: ${url}`
@@ -29,13 +29,41 @@ export class JiraOAuthService {
             );
         }
 
-        const response = await fetch(url, {
+        let response = await fetch(url, {
             ...options,
             headers: {
                 ...options.headers,
                 ...headers,
             },
         });
+
+        // If we get a 401 Unauthorized, try to refresh the token and retry
+        if (response.status === 401) {
+            console.log("JiraService: Received 401, attempting to refresh token");
+            try {
+                // Attempt to refresh the token
+                const newAccessToken = await refreshJiraToken();
+                
+                // Update headers with new token
+                headers = {
+                    ...headers,
+                    Authorization: `Bearer ${newAccessToken}`,
+                };
+                
+                // Retry the request with the new token
+                console.log("JiraService: Retrying request with refreshed token");
+                response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...options.headers,
+                        ...headers,
+                    },
+                });
+            } catch (refreshError) {
+                console.error("JiraService: Failed to refresh token:", refreshError);
+                // Continue with original response if refresh fails
+            }
+        }
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -149,7 +177,7 @@ export class JiraOAuthService {
             description?: string;
             issueTypeId: string;
             assigneeId?: string;
-            priorityId?: string;
+            priorityId?: string; // Keep parameter for backward compatibility
         }
     ) {
         try {
@@ -164,7 +192,7 @@ export class JiraOAuthService {
                 description,
                 issueTypeId,
                 assigneeId,
-                priorityId,
+                // Don't extract priorityId
             } = params;
 
             const issueData: any = {
@@ -204,26 +232,9 @@ export class JiraOAuthService {
                 };
             }
 
-            // Only add priority if specified - it might be causing the 400 error
-            if (priorityId && priorityId.trim() !== "") {
-                console.log(
-                    "JiraService: Including priority in request:",
-                    priorityId
-                );
-                try {
-                    issueData.fields.priority = {
-                        id: priorityId,
-                    };
-                } catch (prioError) {
-                    console.error(
-                        "JiraService: Error adding priority (skipping):",
-                        prioError
-                    );
-                }
-            } else {
-                console.log("JiraService: Skipping priority in request");
-            }
-
+            // Remove priority field completely - it's causing 400 errors
+            // Different JIRA projects have different configurations for priority
+            
             console.log(
                 "JiraService: Final issue data being sent to JIRA:",
                 issueData

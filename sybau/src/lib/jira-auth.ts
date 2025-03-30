@@ -28,6 +28,41 @@ export async function isJiraAuthenticated() {
 }
 
 /**
+ * Get the JIRA access token from cookies in browser context
+ */
+export function getJiraAccessTokenClient() {
+  return getCookieClient('jira_access_token');
+}
+
+/**
+ * Get the JIRA refresh token from cookies in browser context
+ */
+export function getJiraRefreshTokenClient() {
+  return getCookieClient('jira_refresh_token');
+}
+
+/**
+ * Check if the user is authenticated with JIRA in browser context
+ */
+export function isJiraAuthenticatedClient() {
+  return !!getJiraAccessTokenClient();
+}
+
+/**
+ * Helper function to get a cookie value in browser context
+ */
+function getCookieClient(name: string) {
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith(name + '=')) {
+      return cookie.substring(name.length + 1);
+    }
+  }
+  return undefined;
+}
+
+/**
  * Make an authenticated request to the JIRA API
  */
 export async function fetchFromJira<T>(

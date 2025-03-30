@@ -21,13 +21,31 @@ export async function GET(req: NextRequest) {
 
   try {
     const jiraService = new JiraOAuthService();
-    const issueTypes = await jiraService.getProjectIssueTypes(cloudId, projectId);
     
-    return NextResponse.json(issueTypes);
+    // This will fetch the full project metadata including available fields
+    const response = await fetch(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/issue/createmeta?projectIds=${projectId}&expand=projects.issuetypes.fields`,
+      {
+        headers: {
+          Authorization: `Bearer ${await jiraService.getAccessToken()}`,
+          Accept: "application/json"
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `Failed to fetch project metadata: ${response.status} ${response.statusText}` },
+        { status: response.status }
+      );
+    }
+    
+    const metadata = await response.json();
+    return NextResponse.json(metadata);
   } catch (error) {
-    console.error("Error fetching JIRA issue types:", error);
+    console.error("Error fetching JIRA project metadata:", error);
     return NextResponse.json(
-      { error: "Failed to fetch issue types" },
+      { error: "Failed to fetch project metadata" },
       { status: 500 }
     );
   }

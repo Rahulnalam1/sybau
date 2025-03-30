@@ -326,7 +326,20 @@ export function EmailCommandButton({ editor }: { editor?: Editor | null }) {
           const { id: draftId } = await res.json()
           toast.success("Draft saved")
 
-          // OAuth redirect
+          // For JIRA, we can check if the user is already authenticated
+          if (activeIntegration.id === 'jira') {
+            // Check if user is already authenticated with JIRA
+            const jiraAuthCheckRes = await fetch("/api/jira/auth-check")
+            const { authenticated } = await jiraAuthCheckRes.json()
+            
+            if (authenticated) {
+              // Navigate directly to the projects page
+              window.location.href = `/integrate/jira/projects?draft_id=${draftId}`
+              return
+            }
+          }
+
+          // OAuth redirect for new authentication
           let url = getAuthUrlForIntegration(activeIntegration.id)
           if (!url) {
             toast.error("Integration not supported")

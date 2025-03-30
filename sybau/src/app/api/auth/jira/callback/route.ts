@@ -6,8 +6,19 @@ export async function GET(request: Request) {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
-    if (!state || state !== 'random-state-value') {
+    if (!state) {
       return NextResponse.redirect(new URL('/workspace?error=invalid_state', request.url));
+    }
+    
+    // Parse the state JSON
+    let stateData;
+    try {
+      stateData = JSON.parse(state);
+    } catch (e) {
+      // Fall back to direct comparison for backward compatibility
+      if (state !== 'random-state-value') {
+        return NextResponse.redirect(new URL('/workspace?error=invalid_state', request.url));
+      }
     }
 
     if (!code) {
@@ -37,7 +48,13 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
     const { access_token, refresh_token } = tokenData;
 
-    const response = NextResponse.redirect(new URL('/workspace', request.url));
+    // Redirect to the success page and maintain the state
+    const successUrl = new URL('/integrate/jira/success', request.url);
+    if (state) {
+      successUrl.searchParams.set('state', state);
+    }
+    
+    const response = NextResponse.redirect(successUrl);
 
     response.cookies.set({
       name: 'jira_access_token',

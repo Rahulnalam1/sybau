@@ -1,9 +1,9 @@
 import { JiraOAuthService } from "@/api/services/jira/jiraOAuthService";
 import { isJiraAuthenticated } from "@/lib/jira-auth";
 import { redirect } from "next/navigation";
-import { CreateJiraTestIssueButton } from "@/components/jira/create-test-issue-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { JiraProjectSelector } from "@/components/jira/project-selector";
 
 export default async function JiraProjectsPage() {
   // Check if user is authenticated with JIRA
@@ -55,51 +55,11 @@ export default async function JiraProjectsPage() {
         </div>
         
         {projects && projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div key={project.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
-                <div className="flex items-center mb-4">
-                  {project.avatarUrls && project.avatarUrls["48x48"] ? (
-                    <img 
-                      src={project.avatarUrls["48x48"]} 
-                      alt={project.name} 
-                      className="w-10 h-10 mr-3"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-blue-100 rounded-md flex items-center justify-center mr-3">
-                      <span className="text-blue-600 font-medium">{project.name.substring(0, 2)}</span>
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="font-medium text-lg">{project.name}</h3>
-                    <p className="text-sm text-gray-500">Key: {project.key}</p>
-                  </div>
-                </div>
-                
-                <div className="mt-2 mb-4">
-                  <p className="text-sm text-gray-700 line-clamp-3">
-                    {project.description || "No description available"}
-                  </p>
-                </div>
-                
-                <div className="mt-4 space-x-2 flex">
-                  <a
-                    href={`${cloudResource.url}/browse/${project.key}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-100 transition-colors"
-                  >
-                    Open in JIRA
-                  </a>
-                  
-                  <CreateJiraTestIssueButton
-                    cloudId={cloudId}
-                    projectId={project.id}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          <JiraProjectSelector 
+            projects={projects} 
+            cloudId={cloudId} 
+            cloudUrl={cloudResource.url}
+          />
         ) : (
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
             <p>No projects found in this JIRA instance.</p>
