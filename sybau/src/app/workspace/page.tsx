@@ -1,4 +1,10 @@
+"use client"
+
+import { useEditor, EditorContent } from "@tiptap/react";
+import Placeholder from "@tiptap/extension-placeholder";
+import StarterKit from "@tiptap/starter-kit";
 import { AppSidebar } from "@/components/app-sidebar"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,6 +19,16 @@ import {
 import { EmailCommandButton } from "@/components/actions"
 
 export default function Page() {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Start writing...',
+      }),
+    ],
+    content: '',
+  })
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -30,7 +46,12 @@ export default function Page() {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex-1" />
+          <div className="flex-1">
+            <EditorContent 
+              editor={editor} 
+              className="prose max-w-none min-h-[500px] p-4 focus:outline-none" 
+            />
+          </div>
           <div className="flex justify-center pb-4">
             <EmailCommandButton />
           </div>
