@@ -23,14 +23,14 @@ export function TeamSwitcher({
 }: {
   teams: {
     name: string
-    logo: React.ElementType
+    logo: string
     plan: string
   }[]
 }) {
   const { isMobile } = useSidebar()
   const defaultTeam = {
-    name: "Sybau",
-    logo: Flower2,
+    name: "sybau",
+    logo: "🥀",
     plan: ""
   }
   const [activeTeam] = React.useState(defaultTeam)
@@ -49,10 +49,10 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <activeTeam.logo className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-transparent text-sidebar-primary-foreground text-2xl">
+                {activeTeam.logo}
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-xl leading-tight">
                 <span className="truncate font-semibold">
                   {activeTeam.name}
                 </span>
