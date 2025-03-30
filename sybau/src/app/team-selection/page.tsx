@@ -173,7 +173,11 @@ export default function TeamSelectionPage() {
       
       // Redirect back to workspace after a short delay
       setTimeout(() => {
-        router.push("/workspace")
+        if (draftId) {
+          router.push(`/workspace/${draftId}`)
+        } else {
+          router.push("/workspace")
+        }
       }, 2000)
     } catch (error) {
       console.error("Error pushing tasks:", error)
