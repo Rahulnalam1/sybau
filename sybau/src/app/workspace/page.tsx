@@ -3,6 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
+import { Extension } from '@tiptap/core';
 import { AppSidebar } from "@/components/app-sidebar"
 
 import {
@@ -22,9 +23,68 @@ import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { EmailCommandButton } from "@/components/actions"
 import { Toaster } from "sonner"
-import { toast } from "sonner"
 
 import { IntegrationProvider } from "../context/IntegrationContext";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ScrollText } from "lucide-react";
+
+// Custom extension to handle the '++' autocomplete trigger
+const AutocompleteExtension = Extension.create({
+  name: 'autocomplete',
+  
+  addKeyboardShortcuts() {
+    return {
+      '+': ({ editor }) => {
+        // Check if the last character was also a '+'
+        const { selection } = editor.state;
+        const { from } = selection;
+        const lastChar = editor.state.doc.textBetween(Math.max(0, from - 1), from);
+        
+        if (lastChar === '+') {
+          // Remove the "++" trigger
+          editor.commands.deleteRange({ from: from - 2, to: from });
+          
+          // Show loading indicator
+          const loadingToast = toast.loading("Generating autocomplete...");
+          
+          // Get the current paragraph text
+          const paragraph = editor.state.doc.textBetween(
+            editor.state.selection.$from.start(),
+            editor.state.selection.from
+          );
+          
+          // Call the autocomplete API
+          fetch('/api/autocomplete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: paragraph })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.result) {
+              editor.commands.insertContent(data.result);
+              toast.dismiss(loadingToast);
+              toast.success("Text autocompleted");
+            } else {
+              toast.dismiss(loadingToast);
+              toast.error("Failed to autocomplete");
+            }
+          })
+          .catch(error => {
+            console.error("Autocomplete error:", error);
+            toast.dismiss(loadingToast);
+            toast.error("Error generating autocomplete");
+          });
+          
+          return true;
+        }
+        
+        return false;
+      }
+    };
+  }
+});
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,8 +93,9 @@ export default function Page() {
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: 'Start writing...',
+        placeholder: 'Start writing, or type "++" to AI autocomplete',
       }),
+      AutocompleteExtension,
     ],
     content: '',
   })
@@ -129,6 +190,50 @@ export default function Page() {
       };
     }
   }, [editor]);
+
+  const handleSummarize = async () => {
+    if (!editor || editor.isEmpty) {
+      toast.error("No content to summarize");
+      return;
+    }
+    
+    // Get the current editor content
+    const content = editor.getHTML();
+    const textContent = editor.getText();
+    
+    if (!textContent.trim()) {
+      toast.error("No content to summarize");
+      return;
+    }
+    
+    // Show loading indicator
+    const loadingToast = toast.loading("Summarizing content...");
+    
+    try {
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textContent })
+      });
+      
+      if (!response.ok) throw new Error('Failed to summarize');
+      
+      const data = await response.json();
+      
+      if (data.result && data.result.text) {
+        // Create a new document with the summarized content
+        editor.commands.setContent(data.result.text);
+        toast.dismiss(loadingToast);
+        toast.success("Content summarized successfully");
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error("Summarize error:", error);
+      toast.dismiss(loadingToast);
+      toast.error("Failed to summarize content");
+    }
+  };
 
   return (
     <IntegrationProvider>

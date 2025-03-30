@@ -27,6 +27,9 @@ import { IntegrationProvider, useIntegration } from "@/app/context/IntegrationCo
 import Image from "next/image"
 import LinearIconSrc from "../../public/linear.svg"
 import JiraIconSrc from "../../public/jira.svg"
+import TrelloIconSrc from "../../public/trello.svg"
+import NotionIconSrc from "../../public/notion.svg"
+import GitHubIconSrc from "../../public/github.svg"
 
 // Define available integrations with proper icon handling
 const integrations = {
@@ -39,6 +42,21 @@ const integrations = {
     id: "linear", 
     label: "Linear", 
     iconSrc: LinearIconSrc 
+  },
+  "integration-3": { 
+    id: "integration-3", 
+    label: "Trello", 
+    iconSrc: TrelloIconSrc 
+  },
+  "integration-4": { 
+    id: "integration-4", 
+    label: "Notion", 
+    iconSrc: NotionIconSrc 
+  },
+  "integration-5": { 
+    id: "integration-5", 
+    label: "GitHub", 
+    iconSrc: GitHubIconSrc 
   },
 }
 
@@ -60,6 +78,16 @@ const DraggableIntegrationItem = ({
     cursor: 'grabbing'
   } : undefined
 
+  // Determine dot color based on integration type
+  const getDotColor = (id: string) => {
+    // Red dots for Notion, GitHub, and Trello
+    if (id === "integration-3" || id === "integration-4" || id === "integration-5") {
+      return "bg-red-500"
+    }
+    // Green dots for others (Jira and Linear)
+    return "bg-green-500"
+  }
+
   return (
     <div 
       ref={setNodeRef}
@@ -75,16 +103,25 @@ const DraggableIntegrationItem = ({
           <Image src={iconSrc} alt={label} className="size-4" width={16} height={16} />
         </div>
         <div className="font-medium text-muted-foreground">{label}</div>
-        <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" />
+        <div className={`h-2 w-2 rounded-full ${getDotColor(id)} ml-auto`} />
       </DropdownMenuItem>
     </div>
   )
 }
 
-const DragOverlayContent = ({ label, iconSrc } : { 
+const DragOverlayContent = ({ label, iconSrc, id } : { 
   label: string 
   iconSrc: string
+  id: string
 }) => {
+  // Same dot color logic as above
+  const getDotColor = (id: string) => {
+    if (id === "integration-3" || id === "integration-4" || id === "integration-5") {
+      return "bg-red-500"
+    }
+    return "bg-green-500"
+  }
+
   return (
     <div className="bg-white shadow-lg rounded-lg">
       <div className="flex items-center gap-2 p-2 cursor-grab">
@@ -92,7 +129,7 @@ const DragOverlayContent = ({ label, iconSrc } : {
           <Image src={iconSrc} alt={label} className="size-4" width={16} height={16} />
         </div>
         <div className="font-medium text-muted-foreground">{label}</div>
-        <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" />
+        <div className={`h-2 w-2 rounded-full ${getDotColor(id)} ml-auto`} />
       </div>
     </div>
   )
@@ -176,6 +213,7 @@ export function IntegrationsDropdown() {
           <DragOverlayContent 
             label={integrations[activeId as keyof typeof integrations].label}
             iconSrc={integrations[activeId as keyof typeof integrations].iconSrc}
+            id={activeId}
           />
         ) : null}
       </DragOverlay>
