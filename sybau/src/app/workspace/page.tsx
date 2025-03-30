@@ -28,6 +28,7 @@ import { IntegrationProvider } from "../context/IntegrationContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ScrollText } from "lucide-react";
+import { supabase } from "@/api/lib/supabase-browser";
 
 // Custom extension to handle the '++' autocomplete trigger
 const AutocompleteExtension = Extension.create({
@@ -87,7 +88,7 @@ const AutocompleteExtension = Extension.create({
 });
 
 export default function Page() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   const editor = useEditor({
     extensions: [
@@ -100,76 +101,73 @@ export default function Page() {
     content: '',
   })
 
-  const supabase = createClientComponentClient()
-  const router = useRouter()
+  const router = useRouter();
 
-  // Load editor content from Supabase
-  const loadSavedContent = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
-      
-      // Fetch the most recent draft for this user
-      const { data, error } = await supabase
-        .from("drafts")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single()
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-        console.error("Error loading content:", error)
-        toast.error("Failed to load your content")
-      }
-      
-      if (data && editor) {
-        // Set the editor content with the saved content
-        editor.commands.setContent(data.markdown)
-        // Also save to localStorage immediately
-        localStorage.setItem('editor_content', data.markdown)
-      } else {
-        // Check localStorage as a fallback
-        const savedContent = localStorage.getItem('editor_content')
-        if (savedContent && editor) {
-          editor.commands.setContent(savedContent)
+  useEffect(() => {
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const isSaveCombo = (isMac && event.metaKey && event.key === 's') ||
+                          (!isMac && event.ctrlKey && event.key === 's');
+  
+      if (isSaveCombo) {
+        event.preventDefault();
+        if (!editor) return;
+  
+        const markdown = editor.getHTML();
+  
+        // Optional: Get title/platform context
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+
+        const titleRes = await fetch("/api/gemini/title", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+            text: markdown,
+        }),
+        }) 
+
+        const { title } = await titleRes.json()
+  
+        const savingToast = toast.loading("Saving draft...");
+  
+        try {
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({ markdown, title }),
+          });
+  
+          const result = await res.json();
+  
+          toast.dismiss(savingToast);
+  
+          if (res.ok && result.success) {
+            toast.success("Draft saved!", {
+                description: `Changes synced to your account.`,
+                duration: 2000,
+              });
+          } else {
+            toast.error(result.error || "Failed to save draft");
+          }
+        } catch (err) {
+          toast.dismiss(savingToast);
+          toast.error("Save failed — check your connection");
+          console.error("Save error:", err);
         }
       }
-    } catch (err) {
-      console.error("Error loading content:", err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (editor) {
-      loadSavedContent()
-    }
-  }, [editor])
-
-  useEffect(() => {
-    const hash = window.location.hash
-    const params = new URLSearchParams(hash.slice(1))
-
-    const access_token = params.get("access_token")
-    const refresh_token = params.get("refresh_token")
-
-    if (access_token && refresh_token) {
-      supabase.auth.setSession({ access_token, refresh_token })
-        .then(() => {
-          router.replace("/workspace") // Clean the URL
-          
-          // If we just returned from OAuth, we should load the saved content
-          loadSavedContent()
-        })
-        .catch((err) => console.error("Failed to set session", err))
-    }
-  }, [])
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editor]);
   
   // Save editor content to localStorage whenever it changes
   useEffect(() => {

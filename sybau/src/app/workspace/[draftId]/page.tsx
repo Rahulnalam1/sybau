@@ -17,6 +17,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { toast } from "sonner";
 
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -97,7 +98,64 @@ export default function WorkspaceDraftPage() {
     }
 
     fetchDraft()
-  }, [editor, draftId])
+  }, [editor, draftId]);
+
+  useEffect(() => {
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const isSaveCombo = (isMac && event.metaKey && event.key === 's') ||
+                          (!isMac && event.ctrlKey && event.key === 's');
+  
+      if (isSaveCombo) {
+        event.preventDefault();
+        if (!editor) return;
+  
+        const markdown = editor.getHTML();
+  
+        if (!draftId) {
+          toast.error("Draft ID not found");
+          return;
+        }
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+  
+        const savingToast = toast.loading("Saving draft...");
+  
+        try {
+          const res = await fetch(`/api/drafts/${draftId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ markdown }),
+          });
+  
+          const result = await res.json();
+  
+          toast.dismiss(savingToast);
+  
+          if (res.ok && result.success) {
+            toast.success("Draft saved!", {
+              description: `Changes synced to your account.`,
+              duration: 2000,
+            });
+          } else {
+            toast.error(result.error || "Update failed");
+          }
+        } catch (error) {
+          toast.dismiss(savingToast);
+          toast.error("Error saving draft");
+          console.error("PATCH error:", error);
+        }
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editor]);
 
   // Wrap everything in IntegrationProvider
   return (

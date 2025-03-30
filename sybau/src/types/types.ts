@@ -33,7 +33,7 @@ export interface UpdateCardParams extends Partial<CreateCardParams> {
     cardId: string;
 }
 
-export type SupportedPlatform = "jira" | "linear";
+export type SupportedPlatform = "jira" | "linear" | "none";
 
 export interface ParsedInput {
     title: string;
