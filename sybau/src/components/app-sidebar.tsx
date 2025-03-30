@@ -20,6 +20,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { NavProjects } from "@/components/nav-projects"
+import { useDrafts } from "@/hooks/use-drafts";
+import { NavDrafts } from "./drafts/nav-drafts"
 
 // This is sample data.
 const data = {
@@ -159,6 +161,8 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { drafts, loading } = useDrafts()
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -166,10 +170,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavProjects projects={data.projects} />
-        <NavMain items={data.navMain} />
+        {!loading && <NavDrafts drafts={drafts} />}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser/>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

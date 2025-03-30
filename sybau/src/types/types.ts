@@ -32,3 +32,40 @@ export interface CreateCardParams {
 export interface UpdateCardParams extends Partial<CreateCardParams> {
     cardId: string;
 }
+
+export type SupportedPlatform = "jira" | "linear";
+
+export interface ParsedInput {
+    title: string;
+    body: string;
+    platform: SupportedPlatform;
+    userId: string;
+}
+
+export interface Task {
+    title: string;
+    body: string;
+    tags?: string[];
+}
+
+export interface Draft {
+    id: string;
+    title: string;
+    platform: string;
+    createdAt: string;
+}
+
+// same as the Linear Input
+export interface GeminiOutput {
+    title: string;
+    description: string;
+    priority: number;
+    dueDate?: string;
+}
+
+export interface JiraInput {
+    summary: string;
+    description: string;
+    projectId: string;
+    issueTypeId: string;
+}

@@ -19,19 +19,34 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 
-// Define available integrations
+// Import SVGs as React components
+// Option 1: Use Image component if using Next.js
+import Image from "next/image"
+import LinearIconSrc from "../../public/linear.svg"
+import JiraIconSrc from "../../public/jira.svg"
+
+// Define available integrations with proper icon handling
 const integrations = {
-  "integration-1": { id: "integration-1", label: "GitHub" },
-  "integration-2": { id: "integration-2", label: "Jira" },
-  "integration-3": { id: "integration-3", label: "Slack" },
+  "integration-1": { 
+    id: "integration-1", 
+    label: "Jira", 
+    iconSrc: JiraIconSrc 
+  },
+  "integration-2": { 
+    id: "integration-2", 
+    label: "Linear", 
+    iconSrc: LinearIconSrc 
+  },
 }
 
 const DraggableIntegrationItem = ({ 
   id, 
-  label
+  label,
+  iconSrc
 }: { 
   id: string
   label: string
+  iconSrc: string
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: id
@@ -54,7 +69,7 @@ const DraggableIntegrationItem = ({
         onSelect={(e) => e.preventDefault()}
       >
         <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-          <ToyBrick className="size-4" />
+          <Image src={iconSrc} alt={label} className="size-4" width={16} height={16} />
         </div>
         <div className="font-medium text-muted-foreground">{label}</div>
         <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" />
@@ -63,12 +78,15 @@ const DraggableIntegrationItem = ({
   )
 }
 
-const DragOverlayContent = ({ label }: { label: string }) => {
+const DragOverlayContent = ({ label, iconSrc } : { 
+  label: string 
+  iconSrc: string
+}) => {
   return (
     <div className="bg-white shadow-lg rounded-lg">
       <div className="flex items-center gap-2 p-2 cursor-grab">
         <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-          <ToyBrick className="size-4" />
+          <Image src={iconSrc} alt={label} className="size-4" width={16} height={16} />
         </div>
         <div className="font-medium text-muted-foreground">{label}</div>
         <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" />
@@ -118,6 +136,7 @@ export function IntegrationsDropdown() {
             key={integration.id}
             id={integration.id}
             label={integration.label}
+            iconSrc={integration.iconSrc}
           />
         ))}
       </DropdownMenuContent>
@@ -126,6 +145,7 @@ export function IntegrationsDropdown() {
         {activeId && integrations[activeId as keyof typeof integrations] ? (
           <DragOverlayContent 
             label={integrations[activeId as keyof typeof integrations].label}
+            iconSrc={integrations[activeId as keyof typeof integrations].iconSrc}
           />
         ) : null}
       </DragOverlay>

@@ -26,16 +26,41 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user,
-}: {
-  user: {
+import { useEffect, useState } from "react"
+import { supabase } from "@/api/lib/supabase-browser"
+import { useRouter } from "next/navigation"
+
+export function NavUser() {
+  const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const [user, setUser] = useState<{
     name: string
     email: string
     avatar: string
+  } | null>(null)
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          name: user.user_metadata.full_name || user.email,
+          email: user.email!,
+          avatar: user.user_metadata.avatar_url || "",
+        })
+      }
+    }
+
+    loadUser()
+  }, [supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/authentication")
   }
-}) {
-  const { isMobile } = useSidebar()
+
+  if (!user) return null 
 
   return (
     <SidebarMenu>
@@ -80,7 +105,7 @@ export function NavUser({
               <Sticker />
               Feedback
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

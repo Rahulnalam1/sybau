@@ -1,3 +1,5 @@
+// GET api/trello/boards
+
 import { requireAuth } from "@/api/middleware/authMiddleware"
 import { NextRequest, NextResponse } from "next/server"
 import { TrelloController } from "@/api/controllers/trello/trelloController"
